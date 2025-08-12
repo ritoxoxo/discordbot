@@ -4,17 +4,17 @@ FROM node:18
 # Create app directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json (if exists)
+# Copy package.json and package-lock.json if exists
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy all files to container
+# Copy app source code
 COPY . .
 
-# Expose port (not really needed for Discord bot, but good practice)
+# Expose port (for HTTP server)
 EXPOSE 8080
 
-# Run the bot
+# Start the bot
 CMD ["npm", "start"]
