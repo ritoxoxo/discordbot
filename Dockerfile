@@ -4,16 +4,14 @@ FROM node:18
 # Create app directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json if exists
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy app source code
+# Copy source files
 COPY . .
 
-# Expose port (for HTTP server)
+# Expose port for Cloud Run health checks (optional)
 EXPOSE 8080
 
 # Start the bot
