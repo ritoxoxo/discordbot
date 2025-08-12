@@ -1,5 +1,4 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
-const http = require('http');
 
 console.log('Bot script started');
 
@@ -81,11 +80,11 @@ client.on('messageCreate', async (message) => {
 
   if (!targetMember) return;
 
+  // Only add the Vamp role here; don't send embed here to avoid duplicates
   await targetMember.roles.add(VAMP_ROLE_ID);
-  await handleVampRoleAdd(targetMember);
 });
 
-// On role add (manual Vamp role)
+// On role add (manual Vamp role or via above)
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   if (!oldMember.roles.cache.has(VAMP_ROLE_ID) && newMember.roles.cache.has(VAMP_ROLE_ID)) {
     await handleVampRoleAdd(newMember);
@@ -93,14 +92,3 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 });
 
 client.login(TOKEN).catch(console.error);
-
-// Small HTTP server to keep container alive on Google Cloud Run
-const server = http.createServer((req, res) => {
-  res.writeHead(200);
-  res.end('Bot is running');
-});
-
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`HTTP server listening on port ${PORT}`);
-});
