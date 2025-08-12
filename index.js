@@ -1,4 +1,5 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const http = require('http');
 
 console.log('Bot script started');
 
@@ -92,3 +93,14 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 });
 
 client.login(TOKEN).catch(console.error);
+
+// Small HTTP server to keep container alive on Google Cloud Run
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Bot is running');
+});
+
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+  console.log(`HTTP server listening on port ${PORT}`);
+});
