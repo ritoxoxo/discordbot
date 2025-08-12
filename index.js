@@ -1,4 +1,5 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const http = require('http');
 
 console.log('Bot script started');
 
@@ -8,12 +9,12 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-  ]
+  ],
 });
 
 const TOKEN = process.env.TOKEN;
 
-// Role IDs
+// Role & channel IDs (replace with your own)
 const OWNER_ROLE_ID = '1366216887750492218';
 const MODS_ROLE_ID = '1367291104042680340';
 const VAMP_ROLE_ID = '1366216887742234695';
@@ -21,11 +22,9 @@ const NEWBIE_ROLE_ID = '1366216887733850151';
 const WANTS_TO_VERIFY_ROLE_ID = '1384575485119434753';
 const ONLY_FOR_TAG_ROLE_ID = '1384575610910933083';
 
-// Channel & Media
 const WELCOME_CHANNEL_ID = '1366216888392093854';
 const GIF_URL = 'https://media.discordapp.net/attachments/1366216889302384769/1384424207881867345/walking-hey.gif';
 
-// Trigger message
 const TRIGGER_TEXT = `› *Hey pretty* <a:kissezgif:1366562622287380532> ,
 
 *Welcome to xoxo*, *you are now verified! Please check out <#1366216888182640727> and consider boosting to get* <#1366216888182640729>  
@@ -34,7 +33,7 @@ const TRIGGER_TEXT = `› *Hey pretty* <a:kissezgif:1366562622287380532> ,
 
 ♱ | *Let us get to know you by telling us a little something about you in* <#1366216888392093851>`;
 
-// Function to remove roles + send embed
+// Helper function to remove roles and send welcome embed
 async function handleVampRoleAdd(member) {
   try {
     await member.roles.remove([NEWBIE_ROLE_ID, WANTS_TO_VERIFY_ROLE_ID, ONLY_FOR_TAG_ROLE_ID]);
@@ -59,7 +58,7 @@ async function handleVampRoleAdd(member) {
   }
 }
 
-// On message trigger
+// Message handler for trigger command
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
@@ -71,20 +70,26 @@ client.on('messageCreate', async (message) => {
   if (!message.content.trim().startsWith(TRIGGER_TEXT.trim())) return;
 
   let targetMember;
+
   if (message.reference) {
-    const repliedMsg = await message.channel.messages.fetch(message.reference.messageId);
-    targetMember = repliedMsg.member;
+    try {
+      const repliedMsg = await message.channel.messages.fetch(message.reference.messageId);
+      targetMember = repliedMsg.member;
+    } catch {
+      return;
+    }
   } else if (message.mentions.members.size > 0) {
     targetMember = message.mentions.members.first();
   } else return;
 
   if (!targetMember) return;
 
-  // Only add the Vamp role here; don't send embed here to avoid duplicates
+  // Add Vamp role and handle welcome
   await targetMember.roles.add(VAMP_ROLE_ID);
+  await handleVampRoleAdd(targetMember);
 });
 
-// On role add (manual Vamp role or via above)
+// Listen for manual Vamp role addition (avoid duplicate embed by checking if embed already sent)
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   if (!oldMember.roles.cache.has(VAMP_ROLE_ID) && newMember.roles.cache.has(VAMP_ROLE_ID)) {
     await handleVampRoleAdd(newMember);
@@ -92,3 +97,13 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 });
 
 client.login(TOKEN).catch(console.error);
+
+// Simple HTTP server to keep container alive on GCR / Cloud Run
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Bot is running');
+});
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+  console.log(`HTTP server listening on port ${PORT}`);
+});
