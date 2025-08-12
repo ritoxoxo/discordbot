@@ -1,15 +1,11 @@
 {
   "name": "discordbot",
   "version": "1.0.0",
-  "description": "Discord bot deployed on Google Cloud Run",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "discord.js": "^14.12.1"
-  },
-  "engines": {
-    "node": "18.x"
+    "discord.js": "^14.11.0"
   }
 }
